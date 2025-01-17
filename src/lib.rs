@@ -50,10 +50,7 @@ pub async fn run() -> Result<Client, serenity::Error> {
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
         | GatewayIntents::GUILDS
-        | GatewayIntents::GUILD_MEMBERS
-        | GatewayIntents::MESSAGE_CONTENT; // Technically not used but y'know, when life gives you lemons, well idk
-                                           // I just really hate the concepts of intents and I never understood why Discord actually added them
-                                           // Life was way better before that imo
+        | GatewayIntents::GUILD_MEMBERS;
 
     // Set the UPTIME
     let _ = UPTIME.get_or_init(|| async { Instant::now() }).await;
