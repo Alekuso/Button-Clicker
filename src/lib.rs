@@ -28,6 +28,7 @@ use serde::{Deserialize, Serialize};
 use serenity::prelude::*;
 use std::fs;
 use std::time::Instant;
+use ron::ser::PrettyConfig;
 use tokio::sync::OnceCell;
 use tracing::{error, info};
 
@@ -136,7 +137,7 @@ fn get_config() -> Config {
             let config = Config::default();
 
             // Write the default config to a file
-            let config = ron::ser::to_string(&config).unwrap();
+            let config = ron::ser::to_string_pretty(&config, PrettyConfig::default()).unwrap();
 
             fs::write("config.ron", config).unwrap();
 
