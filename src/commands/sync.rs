@@ -16,40 +16,46 @@
  *  as defined by the AGPLv3 license.
  */
 
+use crate::commands::play::create_user;
+use crate::commands::{Context, Error};
+use crate::MONGO_DB;
 use mongodb::bson::{doc, Document};
 use mongodb::Collection;
-use crate::commands::{Context, Error};
-use crate::commands::play::create_user;
-use crate::MONGO_DB;
 
 /// Fix your account if it appears "broken"
 #[poise::command(slash_command)]
-pub async fn sync(
-    ctx: Context<'_>,
-) -> Result<(), Error> {
+pub async fn sync(ctx: Context<'_>) -> Result<(), Error> {
     let db = MONGO_DB.get().unwrap();
     let collection: Collection<Document> = db.collection("users");
 
     // Checks if the user has an account
     // It creates a new account if the user doesn't have one
-    let user = collection.find_one(doc! {"user_id": ctx.author().id.to_string()}).await?;
+    let user = collection
+        .find_one(doc! {"user_id": ctx.author().id.to_string()})
+        .await?;
 
     if user.is_none() {
         create_user(ctx, collection.clone()).await?;
     }
 
     // Force update all infos
-    collection.update_one(doc! {
-        "user_id": ctx.author().id.to_string()
-    }, doc! {
-        "$set": {
-            "username": ctx.author().name.clone(),
-            "user_id": ctx.author().id.to_string(),
-            "avatar_url": ctx.author().avatar_url().unwrap_or_default()
-        }
-    }).await?;
+    collection
+        .update_one(
+            doc! {
+                "user_id": ctx.author().id.to_string()
+            },
+            doc! {
+                "$set": {
+                    "username": ctx.author().name.clone(),
+                    "user_id": ctx.author().id.to_string(),
+                    "avatar_url": ctx.author().avatar_url().unwrap_or_default()
+                }
+            },
+        )
+        .await?;
 
-    let builder = poise::reply::CreateReply::default().content("Your account has been synchronized and fixed!");
+    let builder = poise::reply::CreateReply::default()
+        .content("Your account has been synchronized and fixed!");
 
     ctx.send(builder).await?;
 

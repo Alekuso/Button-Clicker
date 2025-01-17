@@ -12,17 +12,17 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
-use std::time::Duration;
+use crate::commands::{Context, Error};
 use mongodb::bson::{doc, Document};
 use mongodb::Collection;
 use serenity::all::{CreateEmbedFooter, CreateInteractionResponse, EditMessage};
 use serenity::builder::CreateEmbed;
+use std::time::Duration;
 use tracing::info;
-use crate::commands::{Context, Error};
 
 use crate::MONGO_DB;
 
@@ -34,7 +34,9 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     let collection_session: Collection<Document> = db.collection("session");
 
     // Checks if the session already exists
-    let session = collection_session.find_one(doc! {"user_id": ctx.author().id.to_string()}).await?;
+    let session = collection_session
+        .find_one(doc! {"user_id": ctx.author().id.to_string()})
+        .await?;
     if session.is_some() {
         return Err("You already have an active session!".into());
     }
@@ -44,70 +46,89 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     // Checks if the user has an account
     // It creates a new account if the user doesn't have one
     let collection_user: Collection<Document> = db.collection("users");
-    let user = collection_user.find_one(doc! {"user_id": ctx.author().id.to_string()}).await?;
+    let user = collection_user
+        .find_one(doc! {"user_id": ctx.author().id.to_string()})
+        .await?;
     let mut counter: i64;
     if user.is_none() {
         create_user(ctx, collection_user.clone()).await?;
         counter = 0;
     } else {
         counter = user.clone().unwrap().get_i64("counter").unwrap();
-        
+
         // Update the username in the database if it's different
         if user.clone().unwrap().get_str("username").unwrap() != ctx.author().name {
-            collection_user.update_one(doc! {
-                "user_id": ctx.author().id.to_string()
-            }, doc! {
-                "$set": {
-                    "username": ctx.author().name.clone()
-                }
-            }).await?;
+            collection_user
+                .update_one(
+                    doc! {
+                        "user_id": ctx.author().id.to_string()
+                    },
+                    doc! {
+                        "$set": {
+                            "username": ctx.author().name.clone()
+                        }
+                    },
+                )
+                .await?;
             info!("Updated username for {}", ctx.author().id);
         }
-        
+
         // Update the avatar url in the database if it's different
-        if user.unwrap().get_str("avatar_url").unwrap() != ctx.author().avatar_url().unwrap_or_default() {
-            collection_user.update_one(doc! {
-                "user_id": ctx.author().id.to_string()
-            }, doc! {
-                "$set": {
-                    "avatar_url": ctx.author().avatar_url().unwrap_or_default()
-                }
-            }).await?;
+        if user.unwrap().get_str("avatar_url").unwrap()
+            != ctx.author().avatar_url().unwrap_or_default()
+        {
+            collection_user
+                .update_one(
+                    doc! {
+                        "user_id": ctx.author().id.to_string()
+                    },
+                    doc! {
+                        "$set": {
+                            "avatar_url": ctx.author().avatar_url().unwrap_or_default()
+                        }
+                    },
+                )
+                .await?;
             info!("Updated avatar url for {}", ctx.author().id);
         }
     }
-
 
     info!("Creating a new session for {}", ctx.author().id);
 
     let embed = make_embed(ctx, counter);
 
-
     let builder = poise::reply::CreateReply::default()
         .embed(embed)
-        .components(vec![
-            poise::serenity_prelude::CreateActionRow::Buttons(
-                vec![
-                    poise::serenity_prelude::CreateButton::new("click").label("🔘").style(poise::serenity_prelude::ButtonStyle::Primary),
-                    poise::serenity_prelude::CreateButton::new("delete").label("✖️").style(poise::serenity_prelude::ButtonStyle::Danger),
-                ])
-        ]);
+        .components(vec![poise::serenity_prelude::CreateActionRow::Buttons(
+            vec![
+                poise::serenity_prelude::CreateButton::new("click")
+                    .label("🔘")
+                    .style(poise::serenity_prelude::ButtonStyle::Primary),
+                poise::serenity_prelude::CreateButton::new("delete")
+                    .label("✖️")
+                    .style(poise::serenity_prelude::ButtonStyle::Danger),
+            ],
+        )]);
 
     let msg = ctx.send(builder).await?.into_message().await?;
 
-
     loop {
-        let interaction = msg.await_component_interactions(ctx).timeout(Duration::from_secs(3600)).await;
+        let interaction = msg
+            .await_component_interactions(ctx)
+            .timeout(Duration::from_secs(3600))
+            .await;
 
         match interaction {
             Some(interaction) => {
                 // Completely ignore if the interaction doesn't come from the message author
                 if interaction.user.id != ctx.author().id {
                     // Next time avoid Discord to send an "Interaction failed" message
-                    interaction.create_response(ctx, CreateInteractionResponse::Acknowledge).await?;
+                    interaction
+                        .create_response(ctx, CreateInteractionResponse::Acknowledge)
+                        .await?;
                     continue;
                 }
-                
+
                 let interaction_time = std::time::Instant::now();
 
                 // Delete the message if the user clicks on the stop session button
@@ -115,15 +136,17 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
                     msg.delete(ctx).await?;
                     break;
                 }
-                
-                increase_counter(ctx, collection_user.clone(), &mut counter).await?;
-                
-                let mut new_msg = interaction.message.clone();
-                new_msg.edit(ctx, EditMessage::new().embed(
-                    make_embed(ctx, counter)
-                )).await?;
 
-                interaction.create_response(ctx, CreateInteractionResponse::Acknowledge).await?;
+                increase_counter(ctx, collection_user.clone(), &mut counter).await?;
+
+                let mut new_msg = interaction.message.clone();
+                new_msg
+                    .edit(ctx, EditMessage::new().embed(make_embed(ctx, counter)))
+                    .await?;
+
+                interaction
+                    .create_response(ctx, CreateInteractionResponse::Acknowledge)
+                    .await?;
 
                 info!("Increase Counter | Time: {:?}", interaction_time.elapsed());
             }
@@ -134,17 +157,21 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
             }
         }
     }
-    
+
     delete_session(ctx, collection_session).await?;
 
-    info!("Terminating session for {} | Time {:?}", ctx.author().id, time.elapsed());
+    info!(
+        "Terminating session for {} | Time {:?}",
+        ctx.author().id,
+        time.elapsed()
+    );
     Ok(())
 }
 
 fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
     let thumbnail = match ctx.author().avatar_url() {
         Some(url) => url,
-        None => ctx.author().default_avatar_url()
+        None => ctx.author().default_avatar_url(),
     };
     let footer = CreateEmbedFooter::new("Click the button to increase your score!");
     CreateEmbed::new()
@@ -156,42 +183,57 @@ fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
 }
 
 async fn create_session(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection.insert_one(doc! {
-        "user_id": ctx.author().id.to_string(),
-    }).await?;
+    collection
+        .insert_one(doc! {
+            "user_id": ctx.author().id.to_string(),
+        })
+        .await?;
 
     Ok(())
 }
 
 async fn delete_session(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection.delete_one(doc! {
-        "user_id": ctx.author().id.to_string()
-    }).await?;
+    collection
+        .delete_one(doc! {
+            "user_id": ctx.author().id.to_string()
+        })
+        .await?;
 
     Ok(())
 }
 
 pub async fn create_user(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection.insert_one(doc! {
-        "user_id": ctx.author().id.to_string(),
-        "username": ctx.author().name.clone(),
-        "avatar_url": ctx.author().avatar_url().unwrap_or_default(),
-        "counter": 0i64
-    }).await?;
+    collection
+        .insert_one(doc! {
+            "user_id": ctx.author().id.to_string(),
+            "username": ctx.author().name.clone(),
+            "avatar_url": ctx.author().avatar_url().unwrap_or_default(),
+            "counter": 0i64
+        })
+        .await?;
 
     Ok(())
 }
 
-async fn increase_counter(ctx: Context<'_>, collection: Collection<Document>, counter: &mut i64) -> Result<(), Error> {
-    collection.update_one(doc! {
-        "user_id": ctx.author().id.to_string()
-    }, doc! {
-        "$inc": {
-            "counter": 1
-        }
-    }).await?;
+async fn increase_counter(
+    ctx: Context<'_>,
+    collection: Collection<Document>,
+    counter: &mut i64,
+) -> Result<(), Error> {
+    collection
+        .update_one(
+            doc! {
+                "user_id": ctx.author().id.to_string()
+            },
+            doc! {
+                "$inc": {
+                    "counter": 1
+                }
+            },
+        )
+        .await?;
 
     *counter += 1;
-    
+
     Ok(())
 }

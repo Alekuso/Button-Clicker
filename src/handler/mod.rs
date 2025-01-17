@@ -12,18 +12,17 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
+use crate::Handler;
 use serenity::all::{Context, EventHandler, Guild, Interaction, Ready, UnavailableGuild};
 use serenity::async_trait;
-use crate::Handler;
 
-mod ready;
 mod guild_event;
 mod interaction;
-
+mod ready;
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -38,7 +37,7 @@ impl EventHandler for Handler {
     async fn ready(&self, ctx: Context, ready: Ready) {
         self.ready(ctx, ready).await;
     }
-    
+
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         self.interaction_create(ctx, interaction).await;
     }

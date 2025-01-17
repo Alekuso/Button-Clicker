@@ -31,13 +31,12 @@ macro_rules! scan {
     }};
 }
 
-
 // This is still under WIP. It's very far from being the final wanted version
 // it works okay for now
 pub async fn live_cli(ctx: &Context) {
     let command = scan!(String);
     let command = command.split(" ").collect::<Vec<_>>();
-    
+
     match command[0] {
         "status:" => {
             let status = match command[1] {
@@ -52,16 +51,16 @@ pub async fn live_cli(ctx: &Context) {
             };
             ctx.set_presence(None, status);
         }
-        
+
         "activity:" => {
             let activity = command[1..].join(" ");
             ctx.set_activity(Some(ActivityData::playing(activity)));
         }
-        
+
         _ => {
             warn!("Unknown command.");
         }
     }
-    
+
     info!("Command executed.");
 }

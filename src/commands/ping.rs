@@ -12,26 +12,29 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
-use serenity::builder::CreateEmbed;
 use crate::commands::{Context, Error};
+use serenity::builder::CreateEmbed;
 
 /// Measure the latency of the bot.
 #[poise::command(slash_command)]
-pub async fn ping(ctx: Context<'_>) -> Result<(), Error>  {
+pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     let embed = CreateEmbed::new();
 
-
-    let builder = poise::reply::CreateReply::default()
-                .embed(embed);
+    let builder = poise::reply::CreateReply::default().embed(embed);
 
     let now = chrono::Utc::now().timestamp_millis();
     let msg = ctx.send(builder).await?;
 
-    let timestamp = msg.clone().into_message().await?.timestamp.timestamp_millis();
+    let timestamp = msg
+        .clone()
+        .into_message()
+        .await?
+        .timestamp
+        .timestamp_millis();
 
     // Shard's ping is the best way to measure Discord's latency.
     // However, its value is 0 when the client has just started.
@@ -45,7 +48,7 @@ pub async fn ping(ctx: Context<'_>) -> Result<(), Error>  {
     } else {
         ctx.ping().await.as_millis()
     };
-    
+
     let embed = CreateEmbed::new()
         .title("Pong!")
         .description(format!("Latency: {}ms", latency))

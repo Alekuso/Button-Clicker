@@ -12,14 +12,16 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
-use serenity::all::{ChannelId, CreateEmbed, CreateEmbedFooter, CreateMessage, Guild, UnavailableGuild};
+use crate::{Handler, CONFIG};
+use serenity::all::{
+    ChannelId, CreateEmbed, CreateEmbedFooter, CreateMessage, Guild, UnavailableGuild,
+};
 use serenity::prelude::*;
 use tracing::{debug, info};
-use crate::{Handler, CONFIG};
 
 impl Handler {
     pub async fn guild_create(&self, ctx: Context, guild: Guild, is_new: Option<bool>) {
@@ -29,43 +31,54 @@ impl Handler {
             if !is_new.unwrap() {
                 return;
             }
-            
-            info!("Guild {} joined || total {}", guild.name, ctx.cache.guilds().len());
+
+            info!(
+                "Guild {} joined || total {}",
+                guild.name,
+                ctx.cache.guilds().len()
+            );
             // A guild can have no icon, so we need to check if it exists.
             // If it doesn't exist, we use 0.png which is Discord's default icon.
-            let thumbnail_link = guild.icon_url().unwrap_or_else(
-                || String::from("https://cdn.discordapp.com/embed/avatars/0.png")
-            );
-    
+            let thumbnail_link = guild
+                .icon_url()
+                .unwrap_or_else(|| String::from("https://cdn.discordapp.com/embed/avatars/0.png"));
+
             let embed = CreateEmbed::new()
                 .description("**Joined a new guild**")
                 .fields(vec![
                     ("__Name__", guild.name, true),
                     ("__ID__", guild.id.to_string(), true),
                     ("__Members__", guild.member_count.to_string(), true),
-                    ("__Owner__", guild.owner_id.to_user(&ctx).await.unwrap().tag(), true),
+                    (
+                        "__Owner__",
+                        guild.owner_id.to_user(&ctx).await.unwrap().tag(),
+                        true,
+                    ),
                 ])
                 .thumbnail(thumbnail_link)
-                .footer(
-                    CreateEmbedFooter::new(
-                        format!("Now in {} guilds", ctx.cache.guilds().len())
-                    )
-                );
-    
-            let builder = CreateMessage::new()
-                .embed(embed);
-    
+                .footer(CreateEmbedFooter::new(format!(
+                    "Now in {} guilds",
+                    ctx.cache.guilds().len()
+                )));
+
+            let builder = CreateMessage::new().embed(embed);
+
             let channel = ChannelId::from(CONFIG.get().unwrap().log_channel_id.unwrap());
             let message = channel.send_message(&ctx.http, builder).await;
             debug!("Sent message: {:?}", message);
         }
-        
+
         info!("Event guild_create | Time: {:?}", instant.elapsed());
     }
 
-    pub async fn guild_delete(&self, ctx: Context, incomplete: UnavailableGuild, full: Option<Guild>) {
+    pub async fn guild_delete(
+        &self,
+        ctx: Context,
+        incomplete: UnavailableGuild,
+        full: Option<Guild>,
+    ) {
         let instant = std::time::Instant::now();
-        
+
         // Discord can sometimes mess up and "crash" a guild.
         // This still send a guild_delete event.
         // Which technically isn't a bot getting kicked from a guild.
@@ -78,38 +91,44 @@ impl Handler {
             if CONFIG.get().unwrap().log_channel_id.is_none() {
                 return;
             }
-            
-            info!("Guild {} left || total {}", guild.name, ctx.cache.guilds().len());
+
+            info!(
+                "Guild {} left || total {}",
+                guild.name,
+                ctx.cache.guilds().len()
+            );
 
             // A guild can have no icon, so we need to check if it exists.
             // If it doesn't exist, we use 0.png which is Discord's default icon.
-            let thumbnail_link = guild.icon_url().unwrap_or_else(
-                || String::from("https://cdn.discordapp.com/embed/avatars/0.png")
-            );
-            
+            let thumbnail_link = guild
+                .icon_url()
+                .unwrap_or_else(|| String::from("https://cdn.discordapp.com/embed/avatars/0.png"));
+
             let embed = CreateEmbed::new()
                 .description("**Left a guild**")
                 .fields(vec![
                     ("__Name__", guild.name, true),
                     ("__ID__", guild.id.to_string(), true),
                     ("__Members__", guild.member_count.to_string(), true),
-                    ("__Owner__", guild.owner_id.to_user(&ctx).await.unwrap().name, true),
+                    (
+                        "__Owner__",
+                        guild.owner_id.to_user(&ctx).await.unwrap().name,
+                        true,
+                    ),
                 ])
                 .thumbnail(thumbnail_link)
-                .footer(
-                    CreateEmbedFooter::new(
-                        format!("Now in {} guilds", ctx.cache.guilds().len())
-                    )
-                );
+                .footer(CreateEmbedFooter::new(format!(
+                    "Now in {} guilds",
+                    ctx.cache.guilds().len()
+                )));
 
-            let builder = CreateMessage::new()
-                .embed(embed);
+            let builder = CreateMessage::new().embed(embed);
 
             let channel = ChannelId::from(CONFIG.get().unwrap().log_channel_id.unwrap());
             let message = channel.send_message(&ctx.http, builder).await;
             debug!("Sent message: {:?}", message);
         }
-        
+
         info!("Event guild_delete | Time: {:?}", instant.elapsed());
     }
 }

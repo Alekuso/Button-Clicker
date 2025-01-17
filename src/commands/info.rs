@@ -12,10 +12,11 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
+use crate::commands::{Context, Error};
 use mongodb::bson::{doc, Document};
 use mongodb::Collection;
 use readable::byte::*;
@@ -23,15 +24,12 @@ use readable::up::*;
 use serenity::all::CreateEmbedFooter;
 use serenity::builder::CreateEmbed;
 use sysinfo::System;
-use crate::commands::{Context, Error};
 
 use crate::{MONGO_DB, UPTIME};
 
 /// Get information about the bot
 #[poise::command(slash_command)]
-pub async fn info(
-    ctx: Context<'_>,
-) -> Result<(), Error> {
+pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
     let db = MONGO_DB.get().unwrap();
 
     let db_stats = db.run_command(doc! {"dbStats": 1}).await?;
@@ -42,10 +40,16 @@ pub async fn info(
     let uptime = UptimeFull::from(UPTIME.get().unwrap());
 
     let server_count = ctx.cache().guilds().len();
-    let total_users = db.collection::<Collection<Document>>("users").count_documents(doc! {}).await?;
-    let total_sessions = db.collection::<Collection<Document>>("session").count_documents(doc! {}).await?;
+    let total_users = db
+        .collection::<Collection<Document>>("users")
+        .count_documents(doc! {})
+        .await?;
+    let total_sessions = db
+        .collection::<Collection<Document>>("session")
+        .count_documents(doc! {})
+        .await?;
     let memory_usage = Byte::from(get_memory_usage());
-    
+
     let thumbnail = ctx.cache().current_user().avatar_url().unwrap_or_default();
     let footer = CreateEmbedFooter::new("Made with ❤️ by Alex");
     let embed = CreateEmbed::new()
@@ -55,9 +59,7 @@ pub async fn info(
         .color(0x5754d0)
         .footer(footer);
 
-
-    let builder = poise::reply::CreateReply::default()
-        .embed(embed);
+    let builder = poise::reply::CreateReply::default().embed(embed);
 
     ctx.send(builder).await?;
 
@@ -72,6 +74,6 @@ fn get_memory_usage() -> u64 {
     let pid = std::process::id() as usize;
 
     let process = system.process(pid.into()).unwrap();
-    
+
     process.memory()
 }

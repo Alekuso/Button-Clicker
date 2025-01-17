@@ -12,31 +12,31 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
-mod handler;
-mod commands;
 mod cli;
+mod commands;
+mod handler;
 
-use std::fs;
-use mongodb::Database;
+use crate::commands::Data;
 use mongodb::error::Error;
 use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
+use mongodb::Database;
 use serde::{Deserialize, Serialize};
 use serenity::prelude::*;
-use tracing::{error, info};
-use tokio::sync::OnceCell;
+use std::fs;
 use std::time::Instant;
-use crate::commands::Data;
+use tokio::sync::OnceCell;
+use tracing::{error, info};
 
 pub struct Handler;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub token: String,                  // Bot token
-    pub log_channel_id: Option<u64>,    // (optional) Channel ID for logging
+    pub token: String,               // Bot token
+    pub log_channel_id: Option<u64>, // (optional) Channel ID for logging
     mongodb_uri: String,
 }
 
@@ -52,25 +52,23 @@ pub async fn run() -> Result<Client, serenity::Error> {
         | GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MEMBERS
         | GatewayIntents::MESSAGE_CONTENT; // Technically not used but y'know, when life gives you lemons, well idk
-    // I just really hate the concepts of intents and I never understood why Discord actually added them
-    // Life was way better before that imo
-    
-    // Set the UPTIME
-    let _ = UPTIME.get_or_init(|| async {
-        Instant::now()
-    }).await;
+                                           // I just really hate the concepts of intents and I never understood why Discord actually added them
+                                           // Life was way better before that imo
 
-    let _ = CONFIG.get_or_init(|| async {
-        get_config()
-    }).await;
+    // Set the UPTIME
+    let _ = UPTIME.get_or_init(|| async { Instant::now() }).await;
+
+    let _ = CONFIG.get_or_init(|| async { get_config() }).await;
 
     // Initialize MongoDB
-    let _ = MONGO_DB.get_or_init(|| async {
-        let secret = &CONFIG.get().unwrap().mongodb_uri;
-        create_mongo_client(secret)
-            .await
-            .expect("Failed to connect to MongoDB")
-    }).await;
+    let _ = MONGO_DB
+        .get_or_init(|| async {
+            let secret = &CONFIG.get().unwrap().mongodb_uri;
+            create_mongo_client(secret)
+                .await
+                .expect("Failed to connect to MongoDB")
+        })
+        .await;
 
     let token = &CONFIG.get().unwrap().token;
 
@@ -78,7 +76,7 @@ pub async fn run() -> Result<Client, serenity::Error> {
         .options(poise::FrameworkOptions {
             commands: vec![
                 commands::help::help(),
-                commands::play::play(), 
+                commands::play::play(),
                 commands::profile::profile(),
                 commands::leaderboard::leaderboard(),
                 commands::ping::ping(),
@@ -97,8 +95,6 @@ pub async fn run() -> Result<Client, serenity::Error> {
             })
         })
         .build();
-
-
 
     // Initialize the client
     let mut client = Client::builder(token, intents)

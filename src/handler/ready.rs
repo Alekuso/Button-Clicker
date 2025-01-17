@@ -16,24 +16,36 @@
  *  as defined by the AGPLv3 license.
  */
 
+use crate::cli::*;
+use crate::Handler;
 use serenity::all::{ActivityData, OnlineStatus, Ready};
 use serenity::prelude::*;
 use tracing::info;
-use crate::Handler;
-use crate::cli::*;
 
 impl Handler {
     pub async fn ready(&self, ctx: Context, ready: Ready) {
         let instant = std::time::Instant::now();
-        
+
         if let Some(shard) = ready.shard {
-            info!("Connected on shard {}/{} on {} server{}", shard.id.0 + 1, shard.total, ready.guilds.len(), if ready.guilds.len() == 1 { "" } else { "s" });
-            
+            info!(
+                "Connected on shard {}/{} on {} server{}",
+                shard.id.0 + 1,
+                shard.total,
+                ready.guilds.len(),
+                if ready.guilds.len() == 1 { "" } else { "s" }
+            );
+
             #[cfg(debug_assertions)]
-            ctx.set_presence(Some(ActivityData::playing("DEBUG BUILD")), OnlineStatus::DoNotDisturb);
+            ctx.set_presence(
+                Some(ActivityData::playing("DEBUG BUILD")),
+                OnlineStatus::DoNotDisturb,
+            );
 
             #[cfg(not(debug_assertions))]
-            ctx.set_presence(Some(ActivityData::playing("/help to get started")), OnlineStatus::Online);
+            ctx.set_presence(
+                Some(ActivityData::playing("/help to get started")),
+                OnlineStatus::Online,
+            );
 
             if shard.id.0 == 0 {
                 tokio::task::spawn(async move {
@@ -43,7 +55,7 @@ impl Handler {
                 });
             }
         }
-        
+
         info!("Event ready | Time: {:?}", instant.elapsed());
     }
 }

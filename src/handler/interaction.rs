@@ -12,30 +12,32 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with this program. If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
  *
- *  This software may be subject to the AGPLv3 license if it is used as a service over a network, 
+ *  This software may be subject to the AGPLv3 license if it is used as a service over a network,
  *  as defined by the AGPLv3 license.
  */
 
+use crate::Handler;
 use serenity::all::Interaction;
 use serenity::prelude::*;
 use tracing::info;
-use crate::Handler;
 
 impl Handler {
-
     pub async fn interaction_create(&self, _ctx: Context, interaction: Interaction) {
         let instant = std::time::Instant::now();
         let command_name;
-        
+
         if let Interaction::Command(command) = interaction {
             command_name = command.clone().data.name;
-            
         } else {
             command_name = "Unknown".to_string();
         }
-        
+
         if command_name != "Unknown" {
-            info!("Event interaction_create ({}) | Time: {:?}", command_name, instant.elapsed());
+            info!(
+                "Event interaction_create ({}) | Time: {:?}",
+                command_name,
+                instant.elapsed()
+            );
         }
     }
 }
