@@ -25,19 +25,17 @@ use serenity::all::CreateEmbedFooter;
 use serenity::builder::CreateEmbed;
 use sysinfo::System;
 
-use crate::{MONGO_DB, UPTIME};
-
 /// Get information about the bot
 #[poise::command(slash_command)]
 pub async fn info(ctx: Context<'_>) -> Result<(), Error> {
-    let db = MONGO_DB.get().unwrap();
+    let db = &ctx.data().db;
 
     let db_stats = db.run_command(doc! {"dbStats": 1}).await?;
     let storage_size = db_stats.get_i64("storageSize").unwrap(); // in bytes
 
     let readable_storage_size = Byte::from(storage_size);
 
-    let uptime = UptimeFull::from(UPTIME.get().unwrap());
+    let uptime = UptimeFull::from(ctx.data().uptime);
 
     let server_count = ctx.cache().guilds().len();
     let total_users = db

@@ -21,15 +21,13 @@ use mongodb::bson::{doc, Document};
 use mongodb::Collection;
 use serenity::builder::CreateEmbed;
 
-use crate::MONGO_DB;
-
 /// View the profile of yourself or a user
 #[poise::command(slash_command)]
 pub async fn profile(
     ctx: Context<'_>,
     #[description = "(Optional) The username to view the profile of"] username: Option<String>,
 ) -> Result<(), Error> {
-    let db = MONGO_DB.get().unwrap();
+    let db = &ctx.data().db;
     let collection: Collection<Document> = db.collection("users");
 
     let search_self: bool;

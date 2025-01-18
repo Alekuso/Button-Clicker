@@ -18,14 +18,13 @@
 
 use crate::commands::play::create_user;
 use crate::commands::{Context, Error};
-use crate::MONGO_DB;
 use mongodb::bson::{doc, Document};
 use mongodb::Collection;
 
 /// Fix your account if it appears "broken"
 #[poise::command(slash_command)]
 pub async fn sync(ctx: Context<'_>) -> Result<(), Error> {
-    let db = MONGO_DB.get().unwrap();
+    let db = &ctx.data().db;
     let collection: Collection<Document> = db.collection("users");
 
     // Checks if the user has an account

@@ -24,13 +24,11 @@ use serenity::builder::CreateEmbed;
 use std::time::Duration;
 use tracing::info;
 
-use crate::MONGO_DB;
-
 /// Create a play session
 #[poise::command(slash_command)]
 pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     let time = std::time::Instant::now();
-    let db = MONGO_DB.get().unwrap();
+    let db = &ctx.data().db;
     let collection_session: Collection<Document> = db.collection("session");
 
     // Checks if the session already exists
