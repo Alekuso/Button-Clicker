@@ -16,7 +16,7 @@
  *  as defined by the AGPLv3 license.
  */
 
-use serenity::all::{ActivityData, OnlineStatus};
+/*use serenity::all::{ActivityData, OnlineStatus};
 use serenity::prelude::*;
 use tracing::{info, warn};
 
@@ -64,3 +64,4 @@ pub async fn live_cli(ctx: &Context) {
 
     info!("Command executed.");
 }
+*/
