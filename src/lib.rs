@@ -16,7 +16,6 @@
  *  as defined by the AGPLv3 license.
  */
 
-mod cli;
 mod commands;
 mod handler;
 
@@ -36,14 +35,12 @@ pub struct Handler;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub token: String,               // Bot token
+    token: String,                   // Bot token
     pub log_channel_id: Option<u64>, // (optional) Channel ID for logging
     mongodb_uri: String,
 }
 
-pub static MONGO_DB: OnceCell<Database> = OnceCell::const_new();
 pub static CONFIG: OnceCell<Config> = OnceCell::const_new();
-pub static UPTIME: OnceCell<Instant> = OnceCell::const_new();
 
 pub async fn run() -> Result<Client, serenity::Error> {
     info!("Starting Client");
@@ -53,20 +50,7 @@ pub async fn run() -> Result<Client, serenity::Error> {
         | GatewayIntents::GUILDS
         | GatewayIntents::GUILD_MEMBERS;
 
-    // Set the UPTIME
-    let _ = UPTIME.get_or_init(|| async { Instant::now() }).await;
-
     let _ = CONFIG.get_or_init(|| async { get_config() }).await;
-
-    // Initialize MongoDB
-    let _ = MONGO_DB
-        .get_or_init(|| async {
-            let secret = &CONFIG.get().unwrap().mongodb_uri;
-            create_mongo_client(secret)
-                .await
-                .expect("Failed to connect to MongoDB")
-        })
-        .await;
 
     let token = &CONFIG.get().unwrap().token;
 
@@ -89,7 +73,15 @@ pub async fn run() -> Result<Client, serenity::Error> {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 info!("Slash commands registered");
 
-                Ok(Data {})
+                let uri = &CONFIG.get().unwrap().mongodb_uri;
+                let mongo_client = create_mongo_client(uri)
+                    .await
+                    .expect("Failed to connect to MongoDB");
+
+                Ok(Data {
+                    db: mongo_client,
+                    uptime: Instant::now(),
+                })
             })
         })
         .build();

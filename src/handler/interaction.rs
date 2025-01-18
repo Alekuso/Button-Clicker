@@ -27,7 +27,7 @@ impl Handler {
         let command_name;
 
         if let Interaction::Command(command) = interaction {
-            command_name = command.clone().data.name;
+            command_name = command.data.name;
         } else {
             command_name = "Unknown".to_string();
         }

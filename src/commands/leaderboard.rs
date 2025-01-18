@@ -25,8 +25,6 @@ use serenity::builder::CreateEmbed;
 use std::time::Duration;
 use tracing::info;
 
-use crate::MONGO_DB;
-
 enum Filter {
     ScoreAsc,
     ScoreDesc,
@@ -35,7 +33,7 @@ enum Filter {
 /// View the global leaderboard
 #[poise::command(slash_command)]
 pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
-    let db = MONGO_DB.get().unwrap();
+    let db = &ctx.data().db;
     let collection: Collection<Document> = db.collection("users");
 
     let users = get_users(collection.clone(), Filter::ScoreDesc).await?;
@@ -126,7 +124,7 @@ async fn get_users(
 }
 
 async fn author_place(ctx: &Context<'_>) -> Result<(i64, usize), Error> {
-    let db = MONGO_DB.get().unwrap();
+    let db = &ctx.data().db;
     let collection: Collection<Document> = db.collection("users");
 
     let user = collection
