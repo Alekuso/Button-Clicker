@@ -16,7 +16,6 @@
  *  as defined by the AGPLv3 license.
  */
 
-use crate::cli::*;
 use crate::Handler;
 use serenity::all::{ActivityData, OnlineStatus, Ready};
 use serenity::prelude::*;
@@ -46,14 +45,6 @@ impl Handler {
                 Some(ActivityData::playing("/help to get started")),
                 OnlineStatus::Online,
             );
-
-            /*            if shard.id.0 == 0 {
-                tokio::task::spawn(async move {
-                    loop {
-                        live_cli(&ctx).await;
-                    }
-                });
-            }*/
         }
 
         info!("Event ready | Time: {:?}", instant.elapsed());

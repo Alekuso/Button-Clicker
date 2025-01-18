@@ -16,7 +16,6 @@
  *  as defined by the AGPLv3 license.
  */
 
-mod cli;
 mod commands;
 mod handler;
 
