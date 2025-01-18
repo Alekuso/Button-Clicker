@@ -26,7 +26,7 @@ async fn main() -> Result<(), Error> {
     // Set up tracing
     #[cfg(debug_assertions)]
     let subscriber = FmtSubscriber::builder()
-        .with_max_level(Level::INFO)
+        .with_max_level(Level::DEBUG)
         .finish();
 
     #[cfg(not(debug_assertions))]
