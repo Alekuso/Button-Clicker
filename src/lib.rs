@@ -35,7 +35,7 @@ pub struct Handler;
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub token: String,               // Bot token
+    token: String,                   // Bot token
     pub log_channel_id: Option<u64>, // (optional) Channel ID for logging
     mongodb_uri: String,
 }
