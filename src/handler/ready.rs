@@ -47,13 +47,13 @@ impl Handler {
                 OnlineStatus::Online,
             );
 
-            if shard.id.0 == 0 {
+            /*            if shard.id.0 == 0 {
                 tokio::task::spawn(async move {
                     loop {
                         live_cli(&ctx).await;
                     }
                 });
-            }
+            }*/
         }
 
         info!("Event ready | Time: {:?}", instant.elapsed());
