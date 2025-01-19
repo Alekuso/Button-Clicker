@@ -55,7 +55,7 @@ pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
         )
         .field(
             "__Github Repository__",
-            "[Github Repository](https://github.com/Alekuso/Button-Clicker-Bot)",
+            "[Github Repository](https://github.com/Alekuso/Button-Clicker)",
             false,
         )
         .thumbnail(thumbnail)
