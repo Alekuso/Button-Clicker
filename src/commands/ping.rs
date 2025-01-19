@@ -22,41 +22,17 @@ use serenity::builder::CreateEmbed;
 /// Measure the latency of the bot.
 #[poise::command(slash_command)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
-    let embed = CreateEmbed::new();
-
-    let builder = poise::reply::CreateReply::default().embed(embed);
-
-    let now = chrono::Utc::now().timestamp_millis();
-    let msg = ctx.send(builder).await?;
-
-    let timestamp = msg
-        .clone()
-        .into_message()
-        .await?
-        .timestamp
-        .timestamp_millis();
-
-    // Shard's ping is the best way to measure Discord's latency.
-    // However, its value is 0 when the client has just started.
-    // We can avoid this by calculating the latency while sending a message instead of the shard
-    // if the actual ping hasn't been calculated yet.
-    let latency = if ctx.ping().await.as_millis() == 0 {
-        // timestamp will always be higher than now because it'll be got after the message is sent.
-        // so we subtract now from timestamp to get the latency while sending a message.
-        // It's a good enough way to measure Discord's latency.
-        (timestamp - now) as u128
-    } else {
-        ctx.ping().await.as_millis()
-    };
-
+    let latency = ctx.ping().await.as_millis();
     let embed = CreateEmbed::new()
         .title("Pong!")
         .description(format!("Latency: {}ms", latency))
         .color(0x5754d0);
 
-    let builder = poise::reply::CreateReply::default().embed(embed);
+    let builder = poise::reply::CreateReply::default()
+        .embed(embed)
+        .ephemeral(true);
 
-    msg.edit(ctx, builder).await?;
+    ctx.send(builder).await?;
 
     Ok(())
 }
