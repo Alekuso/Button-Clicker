@@ -131,6 +131,7 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
 
                 // Delete the message if the user clicks on the stop session button
                 if interaction.data.custom_id.as_str() != "click" {
+                    delete_session(ctx, collection_session).await?;
                     msg.delete(ctx).await?;
                     break;
                 }
@@ -150,13 +151,12 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
             }
 
             None => {
+                delete_session(ctx, collection_session).await?;
                 msg.delete(ctx).await?;
                 break;
             }
         }
     }
-
-    delete_session(ctx, collection_session).await?;
 
     info!(
         "Terminating session for {} | Time {:?}",
