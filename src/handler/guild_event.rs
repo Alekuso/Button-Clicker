@@ -16,7 +16,7 @@
  *  as defined by the AGPLv3 license.
  */
 
-use crate::{Handler, CONFIG};
+use crate::{CONFIG, Handler};
 use serenity::all::{
     ChannelId, CreateEmbed, CreateEmbedFooter, CreateMessage, Guild, UnavailableGuild,
 };

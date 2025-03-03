@@ -20,9 +20,9 @@ mod commands;
 mod handler;
 
 use crate::commands::Data;
+use mongodb::Database;
 use mongodb::error::Error;
 use mongodb::options::{ClientOptions, ServerApi, ServerApiVersion};
-use mongodb::Database;
 use ron::ser::PrettyConfig;
 use serde::{Deserialize, Serialize};
 use serenity::prelude::*;
@@ -94,7 +94,9 @@ pub async fn run() -> Result<Client, serenity::Error> {
 
     client.start_autosharded().await?;
 
-    error!("This part of the code shouldn't be reached. If you see this, something went wrong. and the bot has probably crashed.");
+    error!(
+        "This part of the code shouldn't be reached. If you see this, something went wrong. and the bot has probably crashed."
+    );
     Ok(client)
 }
 

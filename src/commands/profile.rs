@@ -17,8 +17,8 @@
  */
 
 use crate::commands::{Context, Error};
-use mongodb::bson::{doc, Document};
 use mongodb::Collection;
+use mongodb::bson::{Document, doc};
 use serenity::builder::CreateEmbed;
 
 /// View the profile of yourself or a user

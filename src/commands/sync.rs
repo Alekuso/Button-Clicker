@@ -18,8 +18,8 @@
 
 use crate::commands::play::create_user;
 use crate::commands::{Context, Error};
-use mongodb::bson::{doc, Document};
 use mongodb::Collection;
+use mongodb::bson::{Document, doc};
 
 /// Fix your account if it appears "broken"
 #[poise::command(slash_command)]

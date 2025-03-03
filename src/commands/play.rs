@@ -17,8 +17,8 @@
  */
 
 use crate::commands::{Context, Error};
-use mongodb::bson::{doc, Document};
 use mongodb::Collection;
+use mongodb::bson::{Document, doc};
 use serenity::all::{CreateEmbedFooter, CreateInteractionResponse, EditMessage};
 use serenity::builder::CreateEmbed;
 use std::time::Duration;
