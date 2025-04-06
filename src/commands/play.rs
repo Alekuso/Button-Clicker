@@ -31,13 +31,14 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     let db = &ctx.data().db;
     let collection_session: Collection<Document> = db.collection("session");
 
+    // !!!: Session is disabled for now.
     // Checks if the session already exists
-    let session = collection_session
+/*    let session = collection_session
         .find_one(doc! {"user_id": ctx.author().id.to_string()})
         .await?;
     if session.is_some() {
         return Err("You already have an active session!".into());
-    }
+    }*/
 
     create_session(ctx, collection_session.clone()).await?;
 
@@ -180,23 +181,23 @@ fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
         .footer(footer)
 }
 
-async fn create_session(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection
+async fn create_session(_ctx: Context<'_>, _collection: Collection<Document>) -> Result<(), Error> {
+/*    collection
         .insert_one(doc! {
             "user_id": ctx.author().id.to_string(),
         })
         .await?;
-
+*/
     Ok(())
 }
 
-async fn delete_session(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection
+async fn delete_session(_ctx: Context<'_>, _collection: Collection<Document>) -> Result<(), Error> {
+/*    collection
         .delete_one(doc! {
             "user_id": ctx.author().id.to_string()
         })
         .await?;
-
+*/
     Ok(())
 }
 
