@@ -33,7 +33,7 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
 
     // !!!: Session is disabled for now.
     // Checks if the session already exists
-/*    let session = collection_session
+    /*    let session = collection_session
         .find_one(doc! {"user_id": ctx.author().id.to_string()})
         .await?;
     if session.is_some() {
@@ -148,7 +148,11 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
                     .create_response(ctx, CreateInteractionResponse::Acknowledge)
                     .await?;
 
-                info!("Increase Counter for {} | Time: {:?}", ctx.author().id.to_string(), interaction_time.elapsed());
+                info!(
+                    "Increase Counter for {} | Time: {:?}",
+                    ctx.author().id.to_string(),
+                    interaction_time.elapsed()
+                );
             }
 
             None => {
@@ -182,22 +186,22 @@ fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
 }
 
 async fn create_session(_ctx: Context<'_>, _collection: Collection<Document>) -> Result<(), Error> {
-/*    collection
-        .insert_one(doc! {
-            "user_id": ctx.author().id.to_string(),
-        })
-        .await?;
-*/
+    /*    collection
+            .insert_one(doc! {
+                "user_id": ctx.author().id.to_string(),
+            })
+            .await?;
+    */
     Ok(())
 }
 
 async fn delete_session(_ctx: Context<'_>, _collection: Collection<Document>) -> Result<(), Error> {
-/*    collection
-        .delete_one(doc! {
-            "user_id": ctx.author().id.to_string()
-        })
-        .await?;
-*/
+    /*    collection
+            .delete_one(doc! {
+                "user_id": ctx.author().id.to_string()
+            })
+            .await?;
+    */
     Ok(())
 }
 
