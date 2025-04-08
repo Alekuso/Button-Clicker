@@ -148,7 +148,7 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
                     .create_response(ctx, CreateInteractionResponse::Acknowledge)
                     .await?;
 
-                info!("Increase Counter | Time: {:?}", interaction_time.elapsed());
+                info!("Increase Counter for {} | Time: {:?}", ctx.author().id.to_string(), interaction_time.elapsed());
             }
 
             None => {
