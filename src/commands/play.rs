@@ -232,7 +232,19 @@ async fn increase_counter(
         )
         .await?;
 
-    *counter += 1;
+    // Update the counter, fetches directly from the DB as it might be updated by another session
+    *counter = fetch_score(ctx, collection).await?;
 
     Ok(())
+}
+
+async fn fetch_score(ctx: Context<'_>, collection: Collection<Document>) -> Result<i64, Error> {
+    let user = collection
+        .find_one(doc! {"user_id": ctx.author().id.to_string()})
+        .await?;
+    if user.is_none() {
+        return Ok(0);
+    }
+    let user_counter = user.unwrap().get_i64("counter").unwrap();
+    Ok(user_counter)
 }
