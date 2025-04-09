@@ -34,7 +34,7 @@ pub async fn sync(ctx: Context<'_>) -> Result<(), Error> {
         .await?;
 
     if user.is_none() {
-        create_user(ctx, collection.clone()).await?;
+        create_user(ctx, &collection).await?;
     }
 
     // Force update all infos

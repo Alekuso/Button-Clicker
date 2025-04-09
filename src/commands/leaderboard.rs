@@ -36,7 +36,7 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
     let db = &ctx.data().db;
     let collection: Collection<Document> = db.collection("users");
 
-    let users = get_users(collection.clone(), Filter::ScoreDesc).await?;
+    let users = get_users(&collection, Filter::ScoreDesc).await?;
 
     let embed = make_embed(ctx, users, Filter::ScoreDesc).await;
 
@@ -67,11 +67,11 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
         // Handle which button has been pressed
         let embed = match interaction.data.custom_id.as_str() {
             "asc" => {
-                let users = get_users(collection.clone(), Filter::ScoreAsc).await?;
+                let users = get_users(&collection, Filter::ScoreAsc).await?;
                 make_embed(ctx, users, Filter::ScoreAsc).await
             }
             "desc" => {
-                let users = get_users(collection.clone(), Filter::ScoreDesc).await?;
+                let users = get_users(&collection, Filter::ScoreDesc).await?;
                 make_embed(ctx, users, Filter::ScoreDesc).await
             }
             _ => {
@@ -96,7 +96,7 @@ pub async fn leaderboard(ctx: Context<'_>) -> Result<(), Error> {
 }
 
 async fn get_users(
-    collection: Collection<Document>,
+    collection: &Collection<Document>,
     filter: Filter,
 ) -> Result<Vec<Document>, Error> {
     let cursor = match filter {

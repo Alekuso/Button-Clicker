@@ -29,17 +29,6 @@ use tracing::info;
 pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     let time = std::time::Instant::now();
     let db = &ctx.data().db;
-    let collection_session: Collection<Document> = db.collection("session");
-
-    // Checks if the session already exists
-    let session = collection_session
-        .find_one(doc! {"user_id": ctx.author().id.to_string()})
-        .await?;
-    if session.is_some() {
-        return Err("You already have an active session!".into());
-    }
-
-    create_session(ctx, collection_session.clone()).await?;
 
     // Checks if the user has an account
     // It creates a new account if the user doesn't have one
@@ -49,7 +38,7 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
         .await?;
     let mut counter: i64;
     if user.is_none() {
-        create_user(ctx, collection_user.clone()).await?;
+        create_user(ctx, &collection_user).await?;
         counter = 0;
     } else {
         counter = user.clone().unwrap().get_i64("counter").unwrap();
@@ -131,12 +120,11 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
 
                 // Delete the message if the user clicks on the stop session button
                 if interaction.data.custom_id.as_str() != "click" {
-                    delete_session(ctx, collection_session).await?;
                     msg.delete(ctx).await?;
                     break;
                 }
 
-                increase_counter(ctx, collection_user.clone(), &mut counter).await?;
+                increase_counter(ctx, &collection_user, &mut counter).await?;
 
                 let mut new_msg = interaction.message.clone();
                 new_msg
@@ -147,11 +135,14 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
                     .create_response(ctx, CreateInteractionResponse::Acknowledge)
                     .await?;
 
-                info!("Increase Counter | Time: {:?}", interaction_time.elapsed());
+                info!(
+                    "Increase Counter for {} | Time: {:?}",
+                    ctx.author().id.to_string(),
+                    interaction_time.elapsed()
+                );
             }
 
             None => {
-                delete_session(ctx, collection_session).await?;
                 msg.delete(ctx).await?;
                 break;
             }
@@ -180,27 +171,7 @@ fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
         .footer(footer)
 }
 
-async fn create_session(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection
-        .insert_one(doc! {
-            "user_id": ctx.author().id.to_string(),
-        })
-        .await?;
-
-    Ok(())
-}
-
-async fn delete_session(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
-    collection
-        .delete_one(doc! {
-            "user_id": ctx.author().id.to_string()
-        })
-        .await?;
-
-    Ok(())
-}
-
-pub async fn create_user(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
+pub async fn create_user(ctx: Context<'_>, collection: &Collection<Document>) -> Result<(), Error> {
     collection
         .insert_one(doc! {
             "user_id": ctx.author().id.to_string(),
@@ -215,7 +186,7 @@ pub async fn create_user(ctx: Context<'_>, collection: Collection<Document>) -> 
 
 async fn increase_counter(
     ctx: Context<'_>,
-    collection: Collection<Document>,
+    collection: &Collection<Document>,
     counter: &mut i64,
 ) -> Result<(), Error> {
     collection
@@ -231,7 +202,19 @@ async fn increase_counter(
         )
         .await?;
 
-    *counter += 1;
+    // Update the counter, fetches directly from the DB as it might be updated by another session
+    *counter = fetch_score(ctx, collection).await?;
 
     Ok(())
+}
+
+async fn fetch_score(ctx: Context<'_>, collection: &Collection<Document>) -> Result<i64, Error> {
+    let user = collection
+        .find_one(doc! {"user_id": ctx.author().id.to_string()})
+        .await?;
+    if user.is_none() {
+        return Ok(0);
+    }
+    let user_counter = user.unwrap().get_i64("counter").unwrap();
+    Ok(user_counter)
 }
