@@ -38,7 +38,7 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
         .await?;
     let mut counter: i64;
     if user.is_none() {
-        create_user(ctx, collection_user.clone()).await?;
+        create_user(ctx, &collection_user).await?;
         counter = 0;
     } else {
         counter = user.clone().unwrap().get_i64("counter").unwrap();
@@ -124,7 +124,7 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
                     break;
                 }
 
-                increase_counter(ctx, collection_user.clone(), &mut counter).await?;
+                increase_counter(ctx, &collection_user, &mut counter).await?;
 
                 let mut new_msg = interaction.message.clone();
                 new_msg
@@ -171,7 +171,7 @@ fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
         .footer(footer)
 }
 
-pub async fn create_user(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
+pub async fn create_user(ctx: Context<'_>, collection: &Collection<Document>) -> Result<(), Error> {
     collection
         .insert_one(doc! {
             "user_id": ctx.author().id.to_string(),
@@ -186,7 +186,7 @@ pub async fn create_user(ctx: Context<'_>, collection: Collection<Document>) -> 
 
 async fn increase_counter(
     ctx: Context<'_>,
-    collection: Collection<Document>,
+    collection: &Collection<Document>,
     counter: &mut i64,
 ) -> Result<(), Error> {
     collection
@@ -208,7 +208,7 @@ async fn increase_counter(
     Ok(())
 }
 
-async fn fetch_score(ctx: Context<'_>, collection: Collection<Document>) -> Result<i64, Error> {
+async fn fetch_score(ctx: Context<'_>, collection: &Collection<Document>) -> Result<i64, Error> {
     let user = collection
         .find_one(doc! {"user_id": ctx.author().id.to_string()})
         .await?;
