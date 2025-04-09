@@ -29,18 +29,6 @@ use tracing::info;
 pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
     let time = std::time::Instant::now();
     let db = &ctx.data().db;
-    let collection_session: Collection<Document> = db.collection("session");
-
-    // !!!: Session is disabled for now.
-    // Checks if the session already exists
-    /*    let session = collection_session
-        .find_one(doc! {"user_id": ctx.author().id.to_string()})
-        .await?;
-    if session.is_some() {
-        return Err("You already have an active session!".into());
-    }*/
-
-    create_session(ctx, collection_session.clone()).await?;
 
     // Checks if the user has an account
     // It creates a new account if the user doesn't have one
@@ -132,7 +120,6 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
 
                 // Delete the message if the user clicks on the stop session button
                 if interaction.data.custom_id.as_str() != "click" {
-                    delete_session(ctx, collection_session).await?;
                     msg.delete(ctx).await?;
                     break;
                 }
@@ -156,7 +143,6 @@ pub async fn play(ctx: Context<'_>) -> Result<(), Error> {
             }
 
             None => {
-                delete_session(ctx, collection_session).await?;
                 msg.delete(ctx).await?;
                 break;
             }
@@ -183,26 +169,6 @@ fn make_embed(ctx: Context<'_>, counter: i64) -> CreateEmbed {
         .color(0x5754d0)
         .thumbnail(thumbnail)
         .footer(footer)
-}
-
-async fn create_session(_ctx: Context<'_>, _collection: Collection<Document>) -> Result<(), Error> {
-    /*    collection
-            .insert_one(doc! {
-                "user_id": ctx.author().id.to_string(),
-            })
-            .await?;
-    */
-    Ok(())
-}
-
-async fn delete_session(_ctx: Context<'_>, _collection: Collection<Document>) -> Result<(), Error> {
-    /*    collection
-            .delete_one(doc! {
-                "user_id": ctx.author().id.to_string()
-            })
-            .await?;
-    */
-    Ok(())
 }
 
 pub async fn create_user(ctx: Context<'_>, collection: Collection<Document>) -> Result<(), Error> {
